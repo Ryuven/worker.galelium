@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Worker Dashboard - Galelium</title>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4PKkma67vVXeZvlSv0MNRK5cQvcAvjpg",
+    authDomain: "admingalelium.firebaseapp.com",
+    projectId: "admingalelium",
+    storageBucket: "admingalelium.firebasestorage.app",
+    messagingSenderId: "565330048254",
+    appId: "1:565330048254:web:bab36aae480989e2bfe1af",
+    measurementId: "G-8FRC70X54D"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  let currentUser = null;
+
+  // Проверка авторизации и роли
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+    const docSnap = await getDoc(doc(db, "users", user.uid));
+    if (docSnap.exists() && docSnap.data().role === "worker") {
+      currentUser = user;
+      document.getElementById("welcome").innerText = `Привет, ${user.email}`;
+      loadReports();
+    } else {
+      await signOut(auth);
+      window.location.href = "login.html";
+    }
+  });
+
+  async function updateProfile() {
+    const newEmail = document.getElementById("profileEmail").value;
+    await setDoc(doc(db, "users", currentUser.uid), { email: newEmail }, { merge: true });
+    alert("Профиль обновлен!");
+  }
+
+  async function submitReport() {
+    const text = document.getElementById("reportText").value;
+    await addDoc(collection(db, "reports"), {
+      userId: currentUser.uid,
+      text,
+      status: "new",
+      createdAt: new Date()
+    });
+    document.getElementById("reportText").value = "";
+    loadReports();
+  }
+
+  async function loadReports() {
+    const q = query(collection(db, "reports"), where("userId", "==", currentUser.uid));
+    const querySnapshot = await getDocs(q);
+    const list = document.getElementById("reportsList");
+    list.innerHTML = "";
+    querySnapshot.forEach(doc => {
+      const data = doc.data();
+      const li = document.createElement("li");
+      li.textContent = `${data.text} - ${data.status}`;
+      list.appendChild(li);
+    });
+  }
+
+  async function logout() {
+    await signOut(auth);
+    window.location.href = "login.html";
+  }
+
+  window.updateProfile = updateProfile;
+  window.submitReport = submitReport;
+  window.logout = logout;
+
+</script>
+</head>
+<body>
+<h2 id="welcome">Worker Dashboard</h2>
+<button onclick="logout()">Выход</button>
+<hr>
+
+<h3>Редактировать профиль</h3>
+<input type="email" id="profileEmail" placeholder="Новый Email"><br>
+<button onclick="updateProfile()">Сохранить</button>
+<hr>
+
+<h3>Отправить отчёт</h3>
+<textarea id="reportText" placeholder="Текст отчёта"></textarea><br>
+<button onclick="submitReport()">Отправить</button>
+<hr>
+
+<h3>Мои отчёты</h3>
+<ul id="reportsList"></ul>
+</body>
+</html>
