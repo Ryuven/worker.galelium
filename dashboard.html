@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Worker Dashboard - Galelium</title>
+<title>Dashboard - Galelium</title>
 <style>
   body { font-family: Arial, sans-serif; background: #f4f6f8; padding: 20px; }
   h2 { color: #333; }
@@ -10,17 +10,19 @@
   button { padding: 8px 15px; border: none; border-radius: 5px; background: #4caf50; color: white; cursor: pointer; }
   button:hover { background: #45a049; }
   .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-  input, textarea { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+  input, textarea, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
   ul { list-style: none; padding: 0; }
-  li { padding: 10px; border-bottom: 1px solid #eee; }
+  li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
   li:last-child { border-bottom: none; }
   .status-new { color: #4caf50; font-weight: bold; }
+  .status-done { color: #2196f3; font-weight: bold; }
+  .status-rejected { color: #f44336; font-weight: bold; }
   .report-date { color: #999; font-size: 0.9em; margin-left: 5px; }
 </style>
 </head>
 <body>
 <div class="top-bar">
-  <h2 id="welcome">Worker Dashboard</h2>
+  <h2 id="welcome">Dashboard</h2>
   <button onclick="logout()">Выход</button>
 </div>
 
@@ -30,20 +32,20 @@
   <button onclick="updateProfile()">Сохранить</button>
 </div>
 
-<div class="section">
+<div class="section" id="report-section">
   <h3>Отправить отчёт</h3>
   <textarea id="reportText" placeholder="Текст отчёта"></textarea>
   <button onclick="submitReport()">Отправить</button>
 </div>
 
 <div class="section">
-  <h3>Мои отчёты</h3>
+  <h3>Отчёты</h3>
   <ul id="reportsList"></ul>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -60,15 +62,24 @@
   const db = getFirestore(app);
   const auth = getAuth(app);
   let currentUser = null;
+  let currentRole = "worker";
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = "login.html"; return; }
-    const docSnap = await getDoc(doc(db, "users", user.uid));
-    if (docSnap.exists() && docSnap.data().role === "worker") {
-      currentUser = user;
-      document.getElementById("welcome").innerText = `Привет, ${user.email}`;
-      loadReports();
-    } else { await signOut(auth); window.location.href = "login.html"; }
+    currentUser = user;
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    if (!userSnap.exists()) { alert("Пользователь не найден"); await signOut(auth); return; }
+
+    currentRole = userSnap.data().role || "worker";
+    document.getElementById("welcome").innerText = `Привет, ${user.email} (${currentRole})`;
+
+    if(currentRole === "worker"){
+      document.getElementById("report-section").style.display = "block";
+    } else {
+      document.getElementById("report-section").style.display = "none";
+    }
+
+    loadReports();
   });
 
   async function updateProfile() {
@@ -92,22 +103,46 @@
   }
 
   async function loadReports() {
-    try {
-      // Временное решение: если нет индекса, убрать orderBy
-      const q = query(collection(db, "reports"), where("userId", "==", currentUser.uid));
-      const querySnapshot = await getDocs(q);
-      const list = document.getElementById("reportsList");
-      list.innerHTML = "";
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        const li = document.createElement("li");
-        const date = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-        li.innerHTML = `<span>${data.text}</span> <span class="status-new">[${data.status}]</span> <span class="report-date">(${date.toLocaleString()})</span>`;
-        list.appendChild(li);
-      });
-    } catch (error) {
-      console.error("Ошибка загрузки отчётов:", error);
+    const list = document.getElementById("reportsList");
+    list.innerHTML = "";
+
+    let q;
+    if(currentRole === "worker"){
+      q = query(collection(db, "reports"), where("userId", "==", currentUser.uid));
+    } else { // admin видит все
+      q = query(collection(db, "reports"));
     }
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const li = document.createElement("li");
+      const date = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+      const statusClass = data.status === "new" ? "status-new" : data.status === "done" ? "status-done" : "status-rejected";
+
+      li.innerHTML = `
+        <span>${data.text}</span>
+        <span class="${statusClass}">${data.status}</span>
+        <span class="report-date">(${date.toLocaleString()})</span>
+      `;
+
+      if(currentRole === "admin"){
+        const select = document.createElement("select");
+        ["new","done","rejected"].forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s; opt.innerText = s;
+          if(s === data.status) opt.selected = true;
+          select.appendChild(opt);
+        });
+        select.onchange = async () => {
+          await updateDoc(doc(db, "reports", docSnap.id), {status: select.value});
+          loadReports();
+        }
+        li.appendChild(select);
+      }
+
+      list.appendChild(li);
+    });
   }
 
   async function logout() { await signOut(auth); window.location.href = "login.html"; }
