@@ -3,10 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <title>Worker Login - Galelium</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f6f8; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 320px; }
+  h2 { text-align: center; margin-bottom: 20px; color: #333; }
+  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+  button { width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 5px; background: #4caf50; color: white; font-weight: bold; cursor: pointer; }
+  button:hover { background: #45a049; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Worker Login</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Пароль">
+  <button onclick="registerWorker()">Регистрация</button>
+  <button onclick="loginWorker()">Вход</button>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyC4PKkma67vVXeZvlSv0MNRK5cQvcAvjpg",
@@ -25,53 +43,31 @@
   async function registerWorker() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        email: user.email,
-        role: "worker",
-        createdAt: new Date()
-      });
-
+      await setDoc(doc(db, "users", user.uid), { email: user.email, role: "worker", createdAt: new Date() });
       alert("Регистрация успешна!");
-    } catch (error) {
-      alert(error.message);
-    }
+    } catch (error) { alert(error.message); }
   }
 
   async function loginWorker() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
       const docSnap = await getDoc(doc(db, "users", user.uid));
       if (docSnap.exists() && docSnap.data().role === "worker") {
         window.location.href = "dashboard.html";
       } else {
-        alert("Нет доступа к панели.");
-        await auth.signOut();
+        alert("Нет доступа к панели."); await auth.signOut();
       }
-    } catch (error) {
-      alert(error.message);
-    }
+    } catch (error) { alert(error.message); }
   }
 
   window.registerWorker = registerWorker;
   window.loginWorker = loginWorker;
-
 </script>
-</head>
-<body>
-<h2>Worker Login - Galelium</h2>
-<input type="email" id="email" placeholder="Email"><br>
-<input type="password" id="password" placeholder="Пароль"><br>
-<button onclick="registerWorker()">Регистрация</button>
-<button onclick="loginWorker()">Вход</button>
 </body>
 </html>
