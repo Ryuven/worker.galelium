@@ -90,18 +90,19 @@
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-left { display: flex; align-items: center; gap: 16px; }
-    .nav-logo {
-      font-family: var(--font-display); font-weight: 800;
-      font-size: .95rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text);
+    .nav-logo { flex-shrink: 0; }
+
+    /* Кнопка аватар в nav */
+    .nav-avatar-btn {
+      background: none; border: none; cursor: pointer; padding: 0;
+      display: flex; align-items: center;
+      border-radius: 50%; transition: opacity var(--tf);
     }
-    .nav-badge {
-      font-size: .54rem; letter-spacing: .16em; text-transform: uppercase;
-      color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-mid);
-      padding: 2px 8px;
-    }
+    .nav-avatar-btn:hover { opacity: .8; }
+
     .nav-tabs {
       display: flex; gap: 0;
+      position: absolute; left: 50%; transform: translateX(-50%);
     }
     .nav-tab {
       padding: 0 16px; height: var(--nav-h);
@@ -116,27 +117,149 @@
     .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
     .nav-tab svg { flex-shrink: 0; }
 
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .nav-user {
-      display: flex; align-items: center; gap: 8px;
-      font-size: .74rem; color: var(--muted); cursor: pointer;
-      padding: 4px 8px; border: 1px solid transparent;
-      transition: border-color var(--tf), color var(--tf);
-    }
-    .nav-user:hover { border-color: var(--border-h); color: var(--text); }
     .nav-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--accent-dim); border: 1px solid var(--accent-mid);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent-dim); border: 2px solid var(--accent-mid);
       display: flex; align-items: center; justify-content: center;
       font-family: var(--font-display); font-weight: 800;
-      font-size: .7rem; color: var(--accent); flex-shrink: 0;
+      font-size: .75rem; color: var(--accent);
+      transition: border-color var(--tf);
     }
-    .nav-logout {
-      width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-      background: none; border: 1px solid var(--border); color: var(--muted-2);
+    .nav-avatar-btn:hover .nav-avatar { border-color: var(--accent); }
+
+    /* ══ МОДАЛ СМЕНЫ ════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(5,5,10,.78);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s var(--ease);
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal-sheet {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      width: 100%; max-width: 640px;
+      max-height: 88svh; overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform .3s var(--ease);
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+    .modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+    /* На десктопе — центрированный модал */
+    @media (min-width: 640px) {
+      .modal-overlay { align-items: center; }
+      .modal-sheet {
+        border-radius: 0; border: 1px solid var(--border); border-top: none;
+        max-height: 80svh; margin: 0;
+        transform: translateY(24px) scale(.97);
+      }
+      .modal-overlay.open .modal-sheet { transform: translateY(0) scale(1); }
+    }
+
+    /* Полоска-ручка */
+    .modal-handle {
+      width: 36px; height: 4px; border-radius: 2px;
+      background: var(--border-h); margin: 10px auto 0;
+    }
+    @media (min-width: 640px) { .modal-handle { display: none; } }
+
+    .modal-head {
+      padding: 18px 22px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 12px;
+      position: sticky; top: 0; background: var(--surface); z-index: 10;
+    }
+    .modal-head::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent 60%);
+    }
+    .modal-status-bar {
+      width: 4px; min-height: 44px; border-radius: 2px; flex-shrink: 0; margin-top: 2px;
+    }
+    .modal-status-bar.ok   { background: var(--green); }
+    .modal-status-bar.viol { background: var(--red); }
+    .modal-title-wrap { flex: 1; min-width: 0; }
+    .modal-date-label { font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+    .modal-addr { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: #fff; line-height: 1.2; margin-bottom: 6px; }
+    .modal-times { font-size: .74rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+    .modal-times strong { color: var(--text); }
+    .modal-close {
+      width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      cursor: pointer; transition: border-color var(--tf), color var(--tf);
+    }
+    .modal-close:hover { border-color: var(--border-h); color: var(--text); }
+
+    .modal-body { padding: 20px 22px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Блок приход/уход в модале */
+    .modal-shift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-block {
+      background: var(--surface-2); border: 1px solid var(--border); padding: 14px;
+    }
+    .modal-block__label {
+      font-size: .56rem; letter-spacing:.18em; text-transform: uppercase;
+      color: var(--muted-2); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .modal-block__time {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: 1.8rem; color: #fff; line-height: 1; margin-bottom: 10px;
+    }
+    .modal-photos { display: flex; gap: 6px; flex-wrap: wrap; }
+    .modal-photo {
+      width: 64px; height: 64px; background: var(--surface-3); border: 1px solid var(--border);
+      overflow: hidden; cursor: pointer; text-decoration: none; display: block;
+      transition: border-color var(--tf);
+    }
+    .modal-photo:hover { border-color: var(--accent-mid); }
+    .modal-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .modal-photo-empty {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .52rem; color: var(--muted-2); text-align: center; padding: 6px; line-height: 1.4;
+    }
+    .modal-note { font-size: .76rem; color: var(--muted); font-style: italic; line-height: 1.5; margin-top: 8px; }
+
+    /* Показатели в модале */
+    .modal-stats { display: flex; flex-direction: column; gap: 10px; }
+    .modal-stat-row { display: flex; align-items: center; gap: 10px; }
+    .modal-stat-label { font-size: .7rem; color: var(--muted); min-width: 150px; flex-shrink: 0; }
+    .modal-stat-track { flex: 1; height: 5px; background: var(--surface-3); position: relative; }
+    .modal-stat-fill { height: 100%; transition: width .6s var(--ease); }
+    .modal-stat-fill.ok  { background: var(--green); }
+    .modal-stat-fill.bad { background: var(--red); }
+    .modal-norm-line { position: absolute; top: -3px; bottom: -3px; width: 1px; background: rgba(255,255,255,.2); }
+    .modal-stat-val { font-size: .76rem; min-width: 48px; text-align: right; white-space: nowrap; }
+    .modal-stat-val.ok  { color: var(--green); }
+    .modal-stat-val.bad { color: var(--red); font-weight: 500; }
+    .modal-stat-big {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: 1.4rem; color: #fff; line-height: 1;
+    }
+
+    /* Нарушение-блок */
+    .modal-viol {
+      background: var(--red-dim); border: 1px solid rgba(208,96,112,.25);
+      padding: 11px 14px; font-size: .78rem; color: var(--muted); line-height: 1.5;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .modal-viol svg { flex-shrink: 0; margin-top: 1px; }
+    .modal-viol strong { color: var(--red); display: block; margin-bottom: 2px; }
+
+    /* TG ссылка */
+    .modal-tg {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 16px; border: 1px solid var(--border);
+      font-size: .7rem; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--muted); text-decoration: none;
       transition: border-color var(--tf), color var(--tf);
     }
-    .nav-logout:hover { border-color: var(--red); color: var(--red); }
+    .modal-tg:hover { border-color: var(--accent-mid); color: var(--accent); }
 
     /* Мобильный таб-бар (снизу) */
     .mobile-tabs {
@@ -407,12 +530,17 @@
 
 <!-- ══ НАВИГАЦИЯ ════════════════════════════════════════════ -->
 <nav class="site-nav" id="site-nav" style="display:none">
-  <div class="nav-left">
-    <span class="nav-logo">Galelium</span>
-    <span class="nav-badge">Worker</span>
-  </div>
 
-  <!-- Десктопные вкладки -->
+  <!-- Лого слева -->
+  <a class="nav-logo" href="https://galelium.com" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+    <div style="width:22px;height:22px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1L1 3.8v4.4L6 11l5-2.8V3.8L6 1z" stroke="#0a0a0f" stroke-width="1.3" stroke-linejoin="round"/></svg>
+    </div>
+    <span style="font-family:var(--font-display);font-weight:800;font-size:.88rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text)">Galelium</span>
+    <span style="font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-mid);padding:1px 7px;margin-left:2px">Worker</span>
+  </a>
+
+  <!-- Табы по центру -->
   <div class="nav-tabs">
     <button class="nav-tab active" data-page="dash">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="1" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="8" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="8" width="4" height="4" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -426,21 +554,15 @@
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       История
     </button>
-    <button class="nav-tab" data-page="profile">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-      Профиль
+  </div>
+
+  <!-- Только аватар справа (кликабельный → профиль) -->
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="nav-avatar-btn" data-page="profile" id="nav-avatar-btn" title="Профиль">
+      <div class="nav-avatar" id="nav-avatar">?</div>
     </button>
   </div>
 
-  <div class="nav-right">
-    <div class="nav-user" data-page="profile">
-      <div class="nav-avatar" id="nav-avatar">?</div>
-      <span id="nav-name" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-    </div>
-    <button class="nav-logout" id="btn-logout" title="Выйти">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9 2h1.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9M5.5 9L3 6.5 5.5 4M3 6.5h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-  </div>
 </nav>
 
 <!-- ══ МОБИЛЬНЫЙ ТАБ-БАР ════════════════════════════════════ -->
@@ -829,6 +951,27 @@
 
 </div><!-- /app -->
 
+<!-- ══ МОДАЛ ПРОСМОТРА СМЕНЫ ═════════════════════════════════ -->
+<div class="modal-overlay" id="report-modal" role="dialog" aria-modal="true" aria-label="Детали смены">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <!-- Шапка -->
+    <div class="modal-head">
+      <div class="modal-status-bar ok" id="m-status-bar"></div>
+      <div class="modal-title-wrap">
+        <div class="modal-date-label" id="m-date-label"></div>
+        <div class="modal-addr" id="m-addr"></div>
+        <div class="modal-times" id="m-times"></div>
+      </div>
+      <button class="modal-close" id="modal-close" aria-label="Закрыть">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <!-- Тело -->
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
 <!-- ══ ТОСТ ══════════════════════════════════════════════════ -->
 <div id="toast"><span class="toast-dot"></span><span id="toast-msg"></span></div>
 
@@ -972,7 +1115,6 @@
     const name = userProfile.displayName || user.displayName || user.email?.split('@')[0] || 'Сборщик';
 
     $('nav-avatar').textContent = name.charAt(0).toUpperCase();
-    $('nav-name').textContent   = name;
     $('dash-name').textContent  = name.split(' ')[0];
 
     /* Скрываем лоадер, показываем приложение */
@@ -989,7 +1131,6 @@
     await signOut(auth);
     window.location.replace('login.html');
   }
-  $('btn-logout').addEventListener('click', logout);
   $('btn-logout-2').addEventListener('click', logout);
 
   /* ══════════════════════════════════════════════════════════
@@ -1161,16 +1302,134 @@
     container.querySelectorAll('.report-row[data-id]').forEach(row => {
       row.addEventListener('click', () => {
         const r = allReports.find(x => x._id === row.dataset.id);
-        if (r) showReportDetail(r);
+        if (r) openModal(r);
       });
     });
   }
 
-  /* Детальный просмотр отчёта (простой модал через toast пока) */
-  function showReportDetail(r) {
-    const df = fmtDate(r.date);
-    toast(df.day + ' ' + df.m + ' · ' + (r.address||'') + (isViol(r) ? ' · ⚠ нарушение' : ' · ОК'), isViol(r)?'err':'ok');
+  /* ══════════════════════════════════════════════════════════
+     МОДАЛ ПРОСМОТРА СМЕНЫ
+  ══════════════════════════════════════════════════════════ */
+  const reportModal = $('report-modal');
+  const modalBody   = $('modal-body');
+
+  function openModal(r) {
+    const df   = fmtDate(r.date);
+    const v    = isViol(r);
+    const s    = r.stats || {};
+
+    /* Шапка */
+    $('m-status-bar').className = 'modal-status-bar ' + (v ? 'viol' : 'ok');
+    $('m-date-label').textContent = df.dow + ', ' + df.day + ' ' + df.m + ' ' + df.full.getFullYear() + (v ? ' · ⚠ Нарушение' : ' · Норма');
+    $('m-date-label').style.color = v ? 'var(--red)' : 'var(--accent)';
+    $('m-addr').textContent = r.address || '—';
+
+    const dep = r.departure;
+    const arr = r.arrival;
+    let timesHTML = '';
+    if (arr?.time) timesHTML += 'Приход <strong>' + arr.time + '</strong>';
+    if (dep?.time) timesHTML += ' &nbsp;· Уход <strong>' + dep.time + '</strong>';
+    if (arr?.time && dep?.time) {
+      const am = arr.time.split(':').map(Number), dm = dep.time.split(':').map(Number);
+      const mins = (dm[0]*60+dm[1]) - (am[0]*60+am[1]);
+      if (mins > 0) timesHTML += ' &nbsp;<span style="color:var(--muted-2)">' + Math.floor(mins/60) + 'ч ' + (mins%60 ? mins%60+'м ' : '') + '</span>';
+    }
+    $('m-times').innerHTML = timesHTML;
+
+    /* Тело */
+    function photoBlock(src, label) {
+      if (!src) return '<div class="modal-photo"><div class="modal-photo-empty">Нет фото</div></div>';
+      return '<a class="modal-photo" href="' + esc(src) + '" target="_blank" rel="noopener" title="' + esc(label) + '"><img src="' + esc(src) + '" alt="' + esc(label) + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=\\\"modal-photo-empty\\\">Нет фото</div>\'"/></a>';
+    }
+
+    let html = '';
+
+    /* Нарушение-блок */
+    if (v) {
+      const cBad = s.correction_pct > CORR_NORM;
+      const sBad = s.avg_position_sec > SPEED_NORM;
+      html += '<div class="modal-viol">' +
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5L1 12h12L7 1.5z" stroke="var(--red)" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 5.5v3M7 10.5v.5" stroke="var(--red)" stroke-width="1.2" stroke-linecap="round"/></svg>' +
+        '<div><strong>Зафиксированы нарушения</strong>' +
+          (cBad ? 'Корректировки: ' + s.correction_pct.toFixed(1) + '% (норма ≤' + CORR_NORM + '%)' : '') +
+          (cBad && sBad ? ' · ' : '') +
+          (sBad ? 'Скорость: ' + s.avg_position_sec + 'с (норма ≤' + SPEED_NORM + 'с)' : '') +
+        '</div></div>';
+    }
+
+    /* Приход + Уход */
+    html += '<div class="modal-shift-grid">';
+    html += '<div class="modal-block"><div class="modal-block__label"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="var(--green)" stroke-width="1.2"/><path d="M6 3.5v3l1.5 1.5" stroke="var(--green)" stroke-width="1.2" stroke-linecap="round"/></svg>Приход</div>' +
+      '<div class="modal-block__time">' + (arr?.time || '—') + '</div>' +
+      '<div class="modal-photos">' + photoBlock(arr?.photo_tsd, 'ТСД приход') + '</div>' +
+      (arr?.note ? '<div class="modal-note">' + esc(arr.note) + '</div>' : '') +
+    '</div>';
+    html += '<div class="modal-block"><div class="modal-block__label"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="var(--red)" stroke-width="1.2"/><path d="M6 3.5v3l-1.5 1.5" stroke="var(--red)" stroke-width="1.2" stroke-linecap="round"/></svg>Уход</div>' +
+      '<div class="modal-block__time">' + (dep?.time || '—') + '</div>' +
+      '<div class="modal-photos">' +
+        photoBlock(dep?.photo_tsd,    'ТСД уход') +
+        photoBlock(dep?.photo_stats1, 'Статистика 1') +
+        photoBlock(dep?.photo_stats2, 'Статистика 2') +
+      '</div>' +
+      (dep?.note ? '<div class="modal-note">' + esc(dep.note) + '</div>' : '') +
+    '</div>';
+    html += '</div>';
+
+    /* Показатели */
+    if (s.positions !== undefined || s.orders !== undefined || typeof s.correction_pct === 'number' || typeof s.avg_position_sec === 'number') {
+      html += '<div>';
+      html += '<div style="font-size:.57rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);margin-bottom:12px">Показатели смены</div>';
+      html += '<div class="modal-stats">';
+
+      if (s.positions !== undefined) html += '<div class="modal-stat-row"><div class="modal-stat-label">Позиций собрано</div><div style="flex:1"><span class="modal-stat-big">' + s.positions.toLocaleString('ru') + '</span></div></div>';
+      if (s.orders    !== undefined) html += '<div class="modal-stat-row"><div class="modal-stat-label">Заказов выполнено</div><div style="flex:1"><span class="modal-stat-big" style="color:var(--green)">' + s.orders + '</span></div></div>';
+
+      if (typeof s.correction_pct === 'number') {
+        const cBad = s.correction_pct > CORR_NORM;
+        const cW   = Math.min(100,(s.correction_pct/25)*100);
+        const cN   = (CORR_NORM/25)*100;
+        html += '<div class="modal-stat-row"><div class="modal-stat-label">Корректировки <span style="color:var(--muted-2)">(≤' + CORR_NORM + '%)</span></div>' +
+          '<div class="modal-stat-track"><div class="modal-stat-fill ' + (cBad?'bad':'ok') + '" style="width:0%;transition:width .6s" data-w="' + cW + '%"><div class="modal-norm-line" style="left:' + cN + '%"></div></div></div>' +
+          '<div class="modal-stat-val ' + (cBad?'bad':'ok') + '">' + s.correction_pct.toFixed(1) + '%' + (cBad?' ▲':'') + '</div></div>';
+      }
+      if (typeof s.avg_position_sec === 'number') {
+        const sBad = s.avg_position_sec > SPEED_NORM;
+        const sW   = Math.min(100,(s.avg_position_sec/70)*100);
+        const sN   = (SPEED_NORM/70)*100;
+        html += '<div class="modal-stat-row"><div class="modal-stat-label">Скорость позиции <span style="color:var(--muted-2)">(≤' + SPEED_NORM + 'с)</span></div>' +
+          '<div class="modal-stat-track"><div class="modal-stat-fill ' + (sBad?'bad':'ok') + '" style="width:0%;transition:width .6s" data-w="' + sW + '%"><div class="modal-norm-line" style="left:' + sN + '%"></div></div></div>' +
+          '<div class="modal-stat-val ' + (sBad?'bad':'ok') + '">' + s.avg_position_sec + 'с' + (sBad?' ▲':'') + '</div></div>';
+      }
+
+      html += '</div></div>';
+    }
+
+    /* TG ссылка */
+    if (r.telegram_post) {
+      html += '<div><a class="modal-tg" href="' + esc(r.telegram_post) + '" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Открыть в Telegram</a></div>';
+    }
+
+    modalBody.innerHTML = html;
+
+    /* Анимируем прогресс-бары после рендера */
+    setTimeout(() => {
+      modalBody.querySelectorAll('.modal-stat-fill[data-w]').forEach(el => {
+        el.style.width = el.dataset.w;
+      });
+    }, 80);
+
+    reportModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
+
+  function closeModal() {
+    reportModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  $('modal-close').addEventListener('click', closeModal);
+  reportModal.addEventListener('click', e => { if (e.target === reportModal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   /* ══════════════════════════════════════════════════════════
      НОВЫЙ ОТЧЁТ — СОХРАНЕНИЕ В FIRESTORE
@@ -1344,7 +1603,6 @@
       /* Обновляем nav */
       const name = data.displayName || userProfile.displayName || '';
       $('nav-avatar').textContent = name.charAt(0).toUpperCase() || '?';
-      $('nav-name').textContent   = name;
       $('dash-name').textContent  = name.split(' ')[0];
       renderProfile();
       toast('Профиль сохранён ✓', 'ok');
