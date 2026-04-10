@@ -932,18 +932,46 @@
     }
     currentUser = user;
 
-    /* Загружаем профиль из Firestore */
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    userProfile = snap.exists() ? snap.data() : {};
+    try {
+      /* Загружаем профиль из Firestore */
+      const userRef = doc(db, 'users', user.uid);
+      const snap    = await getDoc(userRef);
 
-    /* Обновляем lastLoginAt */
-    await updateDoc(doc(db, 'users', user.uid), { lastLoginAt: serverTimestamp() });
+      if (!snap.exists()) {
+        /* Новый пользователь — создаём документ (на случай если login.html не успел) */
+        const name = user.displayName || user.email?.split('@')[0] || '';
+        await setDoc(userRef, {
+          uid:         user.uid,
+          email:       user.email || '',
+          displayName: name,
+          phone:       '',
+          role:        'worker',
+          status:      'active',
+          provider:    user.providerData?.[0]?.providerId === 'google.com' ? 'google' : 'email',
+          createdAt:   serverTimestamp(),
+          updatedAt:   serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
+          totalShifts:     0,
+          totalOrders:     0,
+          totalPositions:  0,
+          verifiedByAdmin: false,
+          notes:           '',
+        });
+        userProfile = { uid: user.uid, email: user.email, displayName: name, role: 'worker' };
+      } else {
+        userProfile = snap.data();
+        /* Обновляем lastLoginAt через setDoc merge — безопасно, не падает */
+        await setDoc(userRef, { lastLoginAt: serverTimestamp() }, { merge: true });
+      }
+    } catch (err) {
+      console.warn('Firestore profile error:', err);
+      userProfile = {};
+    }
 
     /* UI */
     const name = userProfile.displayName || user.displayName || user.email?.split('@')[0] || 'Сборщик';
-    const initials = name.charAt(0).toUpperCase();
 
-    $('nav-avatar').textContent = initials;
+    $('nav-avatar').textContent = name.charAt(0).toUpperCase();
     $('nav-name').textContent   = name;
     $('dash-name').textContent  = name.split(' ')[0];
 
@@ -1212,12 +1240,12 @@
       /* 2. Обновляем статистику в профиле пользователя */
       const positions = reportData.stats.positions;
       const orders    = reportData.stats.orders;
-      await updateDoc(doc(db, 'users', currentUser.uid), {
+      await setDoc(doc(db, 'users', currentUser.uid), {
         totalShifts:    increment(1),
         totalOrders:    increment(orders),
         totalPositions: increment(positions),
         updatedAt:      serverTimestamp(),
-      });
+      }, { merge: true });
 
       /* 3. Обновляем локальный массив */
       await loadReports();
@@ -1308,7 +1336,7 @@
     Object.keys(data).forEach(k => { if (data[k] === '' && k !== 'updatedAt') delete data[k]; });
 
     try {
-      await updateDoc(doc(db, 'users', currentUser.uid), data);
+      await setDoc(doc(db, 'users', currentUser.uid), data, { merge: true });
       if (data.displayName && data.displayName !== currentUser.displayName) {
         await updateProfile(currentUser, { displayName: data.displayName });
       }
