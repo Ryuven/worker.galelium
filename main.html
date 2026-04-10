@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Кабинет сборщика | Galelium</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display.swap" />
+  </noscript>
+
+  <style>
+    /* ══ ТОКЕНЫ ══════════════════════════════════════════════ */
+    :root {
+      --bg:         #0a0a0f;
+      --surface:    #111118;
+      --surface-2:  #16161f;
+      --surface-3:  #1c1c28;
+      --border:     rgba(255,255,255,.07);
+      --border-h:   rgba(255,255,255,.13);
+      --accent:     #c8a96e;
+      --accent-dim: rgba(200,169,110,.10);
+      --accent-mid: rgba(200,169,110,.32);
+      --text:       #e8e6e0;
+      --muted:      #7a7870;
+      --muted-2:    #4a4845;
+      --green:      #4caf82;
+      --green-dim:  rgba(76,175,130,.10);
+      --red:        #d06070;
+      --red-dim:    rgba(208,96,112,.10);
+      --yellow:     #d4a843;
+      --font-sans:    'DM Sans', system-ui, sans-serif;
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'Courier New', monospace;
+      --nav-h: 60px;
+      --px: clamp(16px, 5vw, 40px);
+      --ease: cubic-bezier(.4,0,.2,1);
+      --t:    .22s; --tf: .14s;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-sans); font-weight: 300;
+      font-size: .95rem; line-height: 1.65; min-height: 100svh;
+      -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+    img { display: block; max-width: 100%; }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea, select { font-family: inherit; }
+
+    /* ══ AUTH LOADER ════════════════════════════════════════ */
+    #auth-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+    }
+    .loader-logo {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: 1.1rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent);
+    }
+    .loader-bar {
+      width: 120px; height: 2px; background: var(--surface-2); overflow: hidden;
+    }
+    .loader-bar-fill {
+      height: 100%; background: var(--accent);
+      animation: loaderAnim 1.4s ease-in-out infinite;
+    }
+    @keyframes loaderAnim { 0%{width:0%;margin-left:0} 50%{width:75%} 100%{width:0%;margin-left:100%} }
+    @keyframes pulse-g { 0%,100%{box-shadow:0 0 0 0 rgba(76,175,130,.4)} 50%{box-shadow:0 0 0 5px rgba(76,175,130,0)} }
+    @keyframes pulse-r { 0%,100%{box-shadow:0 0 0 0 rgba(208,96,112,.4)} 50%{box-shadow:0 0 0 5px rgba(208,96,112,0)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+
+    /* ══ NAV ════════════════════════════════════════════════ */
+    .site-nav {
+      position: fixed; inset: 0 0 auto; z-index: 200; height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding-inline: var(--px);
+      background: rgba(10,10,15,.95);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-left { display: flex; align-items: center; gap: 16px; }
+    .nav-logo {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: .95rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text);
+    }
+    .nav-badge {
+      font-size: .54rem; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-mid);
+      padding: 2px 8px;
+    }
+    .nav-tabs {
+      display: flex; gap: 0;
+    }
+    .nav-tab {
+      padding: 0 16px; height: var(--nav-h);
+      display: flex; align-items: center; gap: 6px;
+      font-size: .68rem; font-weight: 400; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); border: none; background: none;
+      border-bottom: 2px solid transparent;
+      transition: color var(--tf), border-color var(--tf);
+      cursor: pointer; white-space: nowrap;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .nav-tab svg { flex-shrink: 0; }
+
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-user {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .74rem; color: var(--muted); cursor: pointer;
+      padding: 4px 8px; border: 1px solid transparent;
+      transition: border-color var(--tf), color var(--tf);
+    }
+    .nav-user:hover { border-color: var(--border-h); color: var(--text); }
+    .nav-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent-dim); border: 1px solid var(--accent-mid);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 800;
+      font-size: .7rem; color: var(--accent); flex-shrink: 0;
+    }
+    .nav-logout {
+      width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+      background: none; border: 1px solid var(--border); color: var(--muted-2);
+      transition: border-color var(--tf), color var(--tf);
+    }
+    .nav-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* Мобильный таб-бар (снизу) */
+    .mobile-tabs {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: rgba(10,10,15,.97); border-top: 1px solid var(--border);
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    }
+    .mobile-tabs-inner { display: flex; justify-content: space-around; }
+    .mt-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 4px 16px; background: none; border: none;
+      color: var(--muted-2); font-size: .52rem; letter-spacing: .1em; text-transform: uppercase;
+      transition: color var(--tf); cursor: pointer;
+    }
+    .mt-tab.active { color: var(--accent); }
+
+    /* ══ LAYOUT ═════════════════════════════════════════════ */
+    #app {
+      display: none; padding-top: var(--nav-h);
+      min-height: 100svh;
+    }
+    #app.ready { display: block; }
+
+    .page { display: none; animation: fadeUp .3s var(--ease) both; }
+    .page.active { display: block; }
+
+    /* ══ КОНТЕЙНЕР ══════════════════════════════════════════ */
+    .container { max-width: 860px; margin-inline: auto; padding-inline: var(--px); }
+    .container-sm { max-width: 640px; margin-inline: auto; padding-inline: var(--px); }
+
+    /* ══ УТИЛИТЫ ════════════════════════════════════════════ */
+    .eyebrow {
+      font-size: .6rem; letter-spacing: .24em; text-transform: uppercase;
+      color: var(--accent); display: block;
+    }
+    .section-title {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: clamp(1.2rem,2.5vw,1.7rem); color: #fff; line-height: 1.1; letter-spacing: -.01em;
+    }
+    .section-title em { color: var(--accent); font-style: normal; }
+    .divider { height: 1px; background: var(--border); }
+
+    /* ══ KPI ════════════════════════════════════════════════ */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; }
+    .kpi {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 18px 20px; position: relative; overflow: hidden;
+      transition: border-color var(--tf);
+    }
+    .kpi:hover { border-color: var(--border-h); }
+    .kpi.accent::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent 70%);
+    }
+    .kpi__label { font-size: .56rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted-2); margin-bottom: 10px; }
+    .kpi__val {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: clamp(1.4rem,2.5vw,1.9rem); color: #fff; line-height: 1; letter-spacing: -.02em;
+    }
+    .kpi__val.green { color: var(--green); }
+    .kpi__val.red   { color: var(--red); }
+    .kpi__val.gold  { color: var(--accent); }
+    .kpi__sub { font-size: .67rem; color: var(--muted); margin-top: 6px; }
+
+    /* Прогресс-бар под KPI */
+    .kpi__prog { margin-top: 10px; height: 3px; background: var(--surface-3); }
+    .kpi__prog-fill { height: 100%; transition: width .6s var(--ease); }
+
+    /* ══ ПОЛЯ ФОРМЫ ═════════════════════════════════════════ */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: .57rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted-2);
+    }
+    .field label .req { color: var(--accent); }
+    .field input, .field textarea, .field select {
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); font-size: .9rem; font-weight: 400;
+      padding: 11px 13px; outline: none; width: 100%;
+      transition: border-color var(--tf); -webkit-appearance: none;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent-mid); }
+    .field input::placeholder, .field textarea::placeholder { color: var(--muted-2); }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7870' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 11px center; padding-right: 30px;
+      cursor: pointer;
+    }
+    .field select option { background: var(--surface-3); }
+    .field input.err, .field textarea.err { border-color: rgba(208,96,112,.5); animation: shake .3s ease; }
+    .field-hint { font-size: .66rem; color: var(--muted-2); margin-top: 2px; }
+
+    /* Сетки форм */
+    .fg-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .fg-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .fg-full { grid-column: 1 / -1; }
+
+    /* ══ КНОПКИ ═════════════════════════════════════════════ */
+    .btn-p {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0a0a0f;
+      font-family: var(--font-display); font-weight: 800;
+      font-size: .7rem; letter-spacing: .14em; text-transform: uppercase;
+      padding: 12px 24px; border: none; cursor: pointer;
+      transition: opacity var(--tf); white-space: nowrap;
+    }
+    .btn-p:hover { opacity: .85; }
+    .btn-p:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-g {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+      padding: 10px 18px; cursor: pointer;
+      transition: border-color var(--tf), color var(--tf);
+    }
+    .btn-g:hover { border-color: var(--border-h); color: var(--text); }
+    .btn-danger { border-color: rgba(208,96,112,.25); color: var(--red); }
+    .btn-danger:hover { background: var(--red-dim); }
+
+    /* ══ КАРТОЧКИ ═══════════════════════════════════════════ */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .card-pad { padding: 20px 22px; }
+    .card.accent::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent 60%);
+    }
+
+    /* ══ СЕКЦИИ ФОРМЫ ═══════════════════════════════════════ */
+    .form-section { background: var(--surface); border: 1px solid var(--border); }
+    .form-section-head {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      font-size: .58rem; letter-spacing: .22em; text-transform: uppercase; color: var(--accent);
+    }
+    .form-section-head::after { content: ''; flex: 1; height: 1px; background: var(--border); display: block; }
+    .form-section-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ══ СПИСОК ОТЧЁТОВ ═════════════════════════════════════ */
+    .report-list { display: flex; flex-direction: column; gap: 2px; }
+    .report-row {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 14px 18px; display: grid; gap: 14px;
+      align-items: center; position: relative; overflow: hidden;
+      transition: background var(--tf), border-color var(--tf); cursor: pointer;
+    }
+    .report-row:hover { background: var(--surface-2); border-color: var(--border-h); }
+    .report-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .report-row.ok::before   { background: var(--green); }
+    .report-row.viol::before { background: var(--red); }
+    .report-date {
+      font-family: var(--font-display); font-weight: 700;
+      font-size: .66rem; color: var(--muted);
+    }
+    .report-date strong { display: block; font-size: 1.1rem; color: #fff; line-height: 1; margin-bottom: 1px; }
+    .report-addr { font-size: .84rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-meta { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+
+    /* Прогресс в строке */
+    .prog-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .prog-row:last-child { margin-bottom: 0; }
+    .prog-label { font-size: .54rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted-2); min-width: 26px; flex-shrink: 0; }
+    .prog-track { flex: 1; height: 3px; background: var(--surface-3); min-width: 40px; }
+    .prog-fill { height: 100%; transition: width .5s var(--ease); }
+    .prog-fill.ok   { background: var(--green); }
+    .prog-fill.bad  { background: var(--red); }
+    .prog-val { font-size: .62rem; min-width: 36px; text-align: right; white-space: nowrap; }
+    .prog-val.ok  { color: var(--green); }
+    .prog-val.bad { color: var(--red); }
+
+    /* Пилюли */
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .55rem; letter-spacing: .12em; text-transform: uppercase;
+      padding: 2px 8px;
+    }
+    .pill-green { color: var(--green); background: var(--green-dim); border: 1px solid rgba(76,175,130,.22); }
+    .pill-red   { color: var(--red);   background: var(--red-dim);   border: 1px solid rgba(208,96,112,.22); }
+    .pill-dot   { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+    /* ══ ПУСТОЕ СОСТОЯНИЕ ═══════════════════════════════════ */
+    .empty {
+      text-align: center; padding: 52px 24px;
+      color: var(--muted); font-size: .84rem;
+      border: 1px dashed var(--border); background: var(--surface);
+    }
+    .empty svg { display: block; margin: 0 auto 14px; opacity: .18; }
+
+    /* ══ ТОСТ ═══════════════════════════════════════════════ */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--surface-2); border: 1px solid var(--border);
+      padding: 11px 18px; font-size: .78rem;
+      display: flex; align-items: center; gap: 9px; max-width: 320px;
+      transform: translateY(60px) scale(.95); opacity: 0;
+      transition: transform .25s var(--ease), opacity .2s ease;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+    #toast.ok  { border-color: rgba(76,175,130,.3); }
+    #toast.err { border-color: rgba(208,96,112,.3); }
+    .toast-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    #toast.ok  .toast-dot { background: var(--green); }
+    #toast.err .toast-dot { background: var(--red); }
+
+    /* ══ ДАШБОРД ════════════════════════════════════════════ */
+    #page-dash { padding: clamp(24px,4vw,40px) 0 80px; }
+
+    /* Streak бар */
+    .streak-bar {
+      display: flex; gap: 3px; margin-top: 14px;
+    }
+    .streak-cell {
+      flex: 1; height: 20px; max-width: 22px; border-radius: 2px;
+      transition: background var(--tf);
+    }
+
+    /* ══ ПРОФИЛЬ ════════════════════════════════════════════ */
+    #page-profile { padding: clamp(24px,4vw,40px) 0 80px; }
+    .prof-banner {
+      height: 90px; position: relative; overflow: hidden;
+      background: linear-gradient(135deg,#14102a 0%,#0d1a2e 50%,#0a1818 100%);
+    }
+    .prof-banner::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(ellipse 80% 60% at 70% 50%,rgba(200,169,110,.1),transparent);
+    }
+    .prof-avatar-wrap { position: relative; display: inline-block; }
+    .prof-avatar {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: var(--accent-dim); border: 3px solid var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 800;
+      font-size: 1.6rem; color: var(--accent);
+    }
+    .prof-online {
+      position: absolute; bottom: 3px; right: 3px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--green); border: 2px solid var(--surface);
+    }
+
+    /* ══ АДАПТИВ ════════════════════════════════════════════ */
+    @media (max-width: 720px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .fg-3 { grid-template-columns: 1fr 1fr; }
+      .nav-tabs { display: none; }
+      .mobile-tabs { display: block; }
+      #app { padding-bottom: 72px; }
+      .report-row { grid-template-columns: 72px 1fr auto !important; }
+      .report-bars-col { display: none; }
+    }
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .fg-2 { grid-template-columns: 1fr; }
+      .fg-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ AUTH LOADER ══════════════════════════════════════════ -->
+<div id="auth-loader">
+  <div class="loader-logo">Galelium</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<!-- ══ НАВИГАЦИЯ ════════════════════════════════════════════ -->
+<nav class="site-nav" id="site-nav" style="display:none">
+  <div class="nav-left">
+    <span class="nav-logo">Galelium</span>
+    <span class="nav-badge">Worker</span>
+  </div>
+
+  <!-- Десктопные вкладки -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="dash">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="1" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="8" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="8" width="4" height="4" stroke="currentColor" stroke-width="1.2"/></svg>
+      Дашборд
+    </button>
+    <button class="nav-tab" data-page="new-report">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Новый отчёт
+    </button>
+    <button class="nav-tab" data-page="history">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      История
+    </button>
+    <button class="nav-tab" data-page="profile">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Профиль
+    </button>
+  </div>
+
+  <div class="nav-right">
+    <div class="nav-user" data-page="profile">
+      <div class="nav-avatar" id="nav-avatar">?</div>
+      <span id="nav-name" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+    <button class="nav-logout" id="btn-logout" title="Выйти">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M9 2h1.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9M5.5 9L3 6.5 5.5 4M3 6.5h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ МОБИЛЬНЫЙ ТАБ-БАР ════════════════════════════════════ -->
+<div class="mobile-tabs">
+  <div class="mobile-tabs-inner">
+    <button class="mt-tab active" data-page="dash">
+      <svg width="18" height="18" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="1" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="8" width="4" height="4" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="8" width="4" height="4" stroke="currentColor" stroke-width="1.2"/></svg>
+      Главная
+    </button>
+    <button class="mt-tab" data-page="new-report">
+      <svg width="18" height="18" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v5M4 6.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Отчёт
+    </button>
+    <button class="mt-tab" data-page="history">
+      <svg width="18" height="18" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      История
+    </button>
+    <button class="mt-tab" data-page="profile">
+      <svg width="18" height="18" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 11.5c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Профиль
+    </button>
+  </div>
+</div>
+
+<!-- ══ ПРИЛОЖЕНИЕ ════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ╔══════════════════
+       ║ ДАШБОРД
+       ╚════════════════ -->
+  <div class="page active" id="page-dash">
+    <div class="container" style="padding-top:0">
+
+      <!-- Приветствие + дата -->
+      <div style="padding:28px 0 20px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <span class="eyebrow" style="margin-bottom:6px">Добро пожаловать</span>
+          <div class="section-title">Привет, <em id="dash-name">…</em></div>
+        </div>
+        <div style="text-align:right">
+          <div id="dash-date" style="font-size:.7rem;color:var(--muted)"></div>
+          <div id="dash-time" style="font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:var(--accent);letter-spacing:-.02em;line-height:1"></div>
+        </div>
+      </div>
+
+      <!-- Алерт если нарушения есть -->
+      <div id="dash-alert" style="display:none;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:10px;background:var(--red-dim);border:1px solid rgba(208,96,112,.25);padding:11px 16px;font-size:.78rem;color:var(--muted)">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse-r 2s infinite"></span>
+          <span id="dash-alert-txt"></span>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-grid" style="margin-bottom:2px">
+        <div class="kpi accent">
+          <div class="kpi__label">Смен всего</div>
+          <div class="kpi__val gold" id="d-total">—</div>
+          <div class="kpi__sub">За всё время</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Ср. корр. %</div>
+          <div class="kpi__val" id="d-avg-corr">—</div>
+          <div class="kpi__sub">Норма ≤ 4%</div>
+          <div class="kpi__prog"><div class="kpi__prog-fill" id="d-prog-corr" style="width:0%"></div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Ср. скорость</div>
+          <div class="kpi__val" id="d-avg-speed">—</div>
+          <div class="kpi__sub">Норма ≤ 38 с</div>
+          <div class="kpi__prog"><div class="kpi__prog-fill" id="d-prog-speed" style="width:0%"></div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Позиций собрано</div>
+          <div class="kpi__val" id="d-total-pos">—</div>
+          <div class="kpi__sub">Итого</div>
+        </div>
+      </div>
+
+      <!-- Вторая строка KPI -->
+      <div class="kpi-grid" style="margin-bottom:20px">
+        <div class="kpi">
+          <div class="kpi__label">Заказов выполнено</div>
+          <div class="kpi__val green" id="d-total-ord">—</div>
+          <div class="kpi__sub">Итого</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Смен с нарушениями</div>
+          <div class="kpi__val red" id="d-viols">—</div>
+          <div class="kpi__sub">Корр или скор</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">% в норме</div>
+          <div class="kpi__val green" id="d-ok-pct">—</div>
+          <div class="kpi__sub">Соответствие</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Последняя смена</div>
+          <div class="kpi__val" id="d-last-date" style="font-size:1.1rem">—</div>
+          <div class="kpi__sub" id="d-last-addr" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+        </div>
+      </div>
+
+      <!-- Активность — streak 30 дней -->
+      <div class="card card-pad" style="margin-bottom:2px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2)">Активность за 30 дней</div>
+          <div style="display:flex;gap:8px;font-size:.6rem;color:var(--muted-2)">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--green);display:block;border-radius:1px"></span>Норма</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--red);display:block;border-radius:1px"></span>Нарушение</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--surface-3);display:block;border-radius:1px"></span>Нет</span>
+          </div>
+        </div>
+        <div class="streak-bar" id="streak-bar"></div>
+        <div id="streak-labels" style="display:flex;gap:3px;margin-top:4px;font-size:.52rem;color:var(--muted-2)"></div>
+      </div>
+
+      <!-- Последние 5 смен -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px">
+        <div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2)">Последние смены</div>
+        <button class="btn-g" data-page="history" style="padding:5px 12px;font-size:.6rem">Все смены →</button>
+      </div>
+      <div class="report-list" id="dash-recent"></div>
+
+    </div>
+  </div><!-- /page-dash -->
+
+  <!-- ╔══════════════════
+       ║ НОВЫЙ ОТЧЁТ
+       ╚════════════════ -->
+  <div class="page" id="page-new-report">
+    <div class="container-sm" style="padding-top:28px;padding-bottom:80px">
+      <div style="margin-bottom:24px">
+        <span class="eyebrow" style="margin-bottom:6px">МК Сервис · Galelium</span>
+        <div class="section-title">Новый <em>отчёт</em></div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:6px">Данные сохраняются в вашем личном профиле в Firebase</div>
+      </div>
+
+      <!-- Основная информация -->
+      <div class="form-section" style="margin-bottom:2px">
+        <div class="form-section-head">Основная информация</div>
+        <div class="form-section-body">
+          <div class="fg-2">
+            <div class="field">
+              <label>Дата смены <span class="req">*</span></label>
+              <input type="date" id="r-date" />
+            </div>
+            <div class="field">
+              <label>Адрес объекта <span class="req">*</span></label>
+              <input type="text" id="r-address" placeholder="ул. Ленина 5, Склад" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Приход -->
+      <div class="form-section" style="margin-bottom:2px">
+        <div class="form-section-head">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></span>
+          Приход
+        </div>
+        <div class="form-section-body">
+          <div class="fg-2">
+            <div class="field">
+              <label>Время прихода <span class="req">*</span></label>
+              <input type="time" id="r-arr-time" />
+            </div>
+            <div class="field">
+              <label>Фото ТСД (ссылка)</label>
+              <input type="url" id="r-arr-photo" placeholder="https://..." />
+              <div class="field-hint">Ссылка на фото из Telegram или Google Drive</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Заметка при приходе</label>
+            <textarea id="r-arr-note" placeholder="Дополнительная информация…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Уход -->
+      <div class="form-section" style="margin-bottom:2px">
+        <div class="form-section-head">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></span>
+          Уход
+        </div>
+        <div class="form-section-body">
+          <div class="fg-2">
+            <div class="field">
+              <label>Время ухода <span class="req">*</span></label>
+              <input type="time" id="r-dep-time" />
+            </div>
+            <div class="field">
+              <label>Фото ТСД уход (ссылка)</label>
+              <input type="url" id="r-dep-photo-tsd" placeholder="https://..." />
+            </div>
+            <div class="field">
+              <label>Фото статистики 1 (ссылка)</label>
+              <input type="url" id="r-dep-photo-s1" placeholder="https://..." />
+            </div>
+            <div class="field">
+              <label>Фото статистики 2 (ссылка)</label>
+              <input type="url" id="r-dep-photo-s2" placeholder="https://..." />
+            </div>
+          </div>
+          <div class="field">
+            <label>Заметка при уходе</label>
+            <textarea id="r-dep-note" placeholder="Проблемы, особенности, комментарии…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Показатели -->
+      <div class="form-section" style="margin-bottom:2px">
+        <div class="form-section-head">Показатели смены</div>
+        <div class="form-section-body">
+          <div class="fg-3">
+            <div class="field">
+              <label>Позиций собрано</label>
+              <input type="number" id="r-positions" placeholder="0" min="0" />
+            </div>
+            <div class="field">
+              <label>Заказов выполнено</label>
+              <input type="number" id="r-orders" placeholder="0" min="0" />
+            </div>
+            <div class="field">
+              <label>Корректировки, %</label>
+              <input type="number" id="r-corr" placeholder="0.0" min="0" step="0.1" />
+              <div class="field-hint">Норма ≤ 4%</div>
+            </div>
+            <div class="field">
+              <label>Ср. скорость позиции, сек</label>
+              <input type="number" id="r-speed" placeholder="0" min="0" />
+              <div class="field-hint">Норма ≤ 38 с</div>
+            </div>
+            <div class="field">
+              <label>Ссылка на Telegram-пост</label>
+              <input type="url" id="r-tg" placeholder="https://t.me/..." class="fg-full" style="grid-column:1/-1" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Кнопка отправки -->
+      <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn-p" id="btn-submit-report">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 7l4 4 6-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="submit-txt">Отправить отчёт</span>
+          <span id="submit-spinner" style="display:none;width:13px;height:13px;border:2px solid rgba(10,10,15,.2);border-top-color:#0a0a0f;border-radius:50%;animation:loaderAnim1 .7s linear infinite"></span>
+        </button>
+        <button class="btn-g" id="btn-reset-form">Очистить форму</button>
+        <div id="form-saved-msg" style="display:none;font-size:.72rem;color:var(--green);display:flex;align-items:center;gap:5px">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M3.5 6l2 2 3.5-3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Отчёт сохранён
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /page-new-report -->
+
+  <!-- ╔══════════════════
+       ║ ИСТОРИЯ
+       ╚════════════════ -->
+  <div class="page" id="page-history">
+    <div class="container" style="padding-top:28px;padding-bottom:80px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <span class="eyebrow" style="margin-bottom:6px">Личный архив</span>
+          <div class="section-title">История смен</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- Фильтр -->
+          <button class="btn-g" id="hist-filter-viol" style="font-size:.62rem;padding:7px 14px">
+            Только нарушения
+          </button>
+          <!-- Поиск -->
+          <div style="position:relative">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted-2);pointer-events:none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M9 9l2.5 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <input type="search" id="hist-search" placeholder="Поиск по адресу…"
+              style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:.8rem;padding:7px 12px 7px 30px;outline:none;width:200px;transition:border-color var(--tf)"
+              onfocus="this.style.borderColor='var(--accent-mid)'" onblur="this.style.borderColor='var(--border)'" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Сводка -->
+      <div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px" id="hist-count-label"></div>
+
+      <div class="report-list" id="hist-list">
+        <div class="empty">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="1.5"/></svg>
+          <p>Загрузка…</p>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-history -->
+
+  <!-- ╔══════════════════
+       ║ ПРОФИЛЬ
+       ╚════════════════ -->
+  <div class="page" id="page-profile">
+    <div class="container-sm" style="padding-top:0;padding-bottom:80px">
+
+      <!-- Баннер + аватар -->
+      <div class="prof-banner"></div>
+      <div style="padding:0 24px;margin-top:-34px;position:relative">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div class="prof-avatar-wrap">
+            <div class="prof-avatar" id="prof-av">?</div>
+            <div class="prof-online"></div>
+          </div>
+          <button class="btn-g" id="btn-save-profile" style="margin-bottom:8px">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Сохранить
+          </button>
+        </div>
+        <div style="margin-top:14px">
+          <div style="font-family:var(--font-display);font-weight:800;font-size:1.2rem;color:#fff;line-height:1.1" id="prof-name-display">—</div>
+          <div style="font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-top:3px" id="prof-role-display">worker</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:4px" id="prof-email-display">—</div>
+        </div>
+      </div>
+
+      <!-- Статистика -->
+      <div class="kpi-grid" style="margin:16px 0 2px">
+        <div class="kpi"><div class="kpi__label">Смен</div><div class="kpi__val gold" id="p-total">—</div></div>
+        <div class="kpi"><div class="kpi__label">Нарушений</div><div class="kpi__val red" id="p-viols">—</div></div>
+        <div class="kpi"><div class="kpi__label">Позиций</div><div class="kpi__val" id="p-pos">—</div></div>
+        <div class="kpi"><div class="kpi__label">Заказов</div><div class="kpi__val green" id="p-ord">—</div></div>
+      </div>
+
+      <!-- Форма данных -->
+      <div class="form-section" style="margin-top:2px;margin-bottom:2px">
+        <div class="form-section-head">Личные данные</div>
+        <div class="form-section-body">
+          <div class="fg-2">
+            <div class="field"><label>Имя и фамилия</label><input type="text" id="p-displayname" /></div>
+            <div class="field"><label>Телефон</label><input type="tel" id="p-phone" placeholder="+7 (000) 000-00-00" /></div>
+            <div class="field"><label>Telegram</label><input type="text" id="p-telegram" placeholder="@username" /></div>
+            <div class="field"><label>Локация</label><input type="text" id="p-location" placeholder="Санкт-Петербург" /></div>
+          </div>
+          <div class="field">
+            <label>О себе</label>
+            <textarea id="p-bio" placeholder="Краткое описание…" style="min-height:60px"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firebase Auth мета -->
+      <div class="form-section">
+        <div class="form-section-head">Аккаунт Firebase</div>
+        <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:.76rem">
+            <span style="color:var(--muted)">UID</span>
+            <code id="p-uid" style="font-size:.62rem;color:var(--muted-2);background:var(--surface-2);padding:2px 7px;cursor:pointer" title="Копировать">—</code>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:.76rem">
+            <span style="color:var(--muted)">Email</span>
+            <span id="p-email-meta" style="color:var(--text)">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:.76rem">
+            <span style="color:var(--muted)">Роль</span>
+            <span id="p-role-meta" style="color:var(--accent)">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:.76rem">
+            <span style="color:var(--muted)">Регистрация</span>
+            <span id="p-created" style="color:var(--muted-2)">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:.76rem">
+            <span style="color:var(--muted)">Последний вход</span>
+            <span id="p-last-login" style="color:var(--muted-2)">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Выход -->
+      <div style="margin-top:16px;display:flex;justify-content:flex-end">
+        <button class="btn-g btn-danger" id="btn-logout-2">
+          <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><path d="M9 2h1.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9M5.5 9L3 6.5 5.5 4M3 6.5h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Выйти из аккаунта
+        </button>
+      </div>
+
+    </div>
+  </div><!-- /page-profile -->
+
+</div><!-- /app -->
+
+<!-- ══ ТОСТ ══════════════════════════════════════════════════ -->
+<div id="toast"><span class="toast-dot"></span><span id="toast-msg"></span></div>
+
+<!-- ══ FIREBASE ══════════════════════════════════════════════ -->
+<script type="module">
+  import { initializeApp }
+    from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut, updateProfile }
+    from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+  import {
+    getFirestore, doc, getDoc, setDoc, addDoc, updateDoc,
+    collection, query, where, orderBy, getDocs, serverTimestamp, increment
+  } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+
+  /* ── КОНФИГ ─────────────────────────────────────────────── */
+  const firebaseConfig = {
+    apiKey:            'AIzaSyC4PKkma67vVXeZvlSv0MNRK5cQvcAvjpg',
+    authDomain:        'admingalelium.firebaseapp.com',
+    projectId:         'admingalelium',
+    storageBucket:     'admingalelium.firebasestorage.app',
+    messagingSenderId: '565330048254',
+    appId:             '1:565330048254:web:bab36aae480989e2bfe1af',
+    measurementId:     'G-8FRC70X54D'
+  };
+
+  const fbApp  = initializeApp(firebaseConfig);
+  const auth   = getAuth(fbApp);
+  const db     = getFirestore(fbApp);
+
+  /* ── ГЛОБАЛЬНОЕ СОСТОЯНИЕ ────────────────────────────────── */
+  let currentUser  = null;
+  let userProfile  = {};
+  let allReports   = [];   /* массив всех отчётов юзера */
+  const CORR_NORM  = 4;    /* % норма корректировок */
+  const SPEED_NORM = 38;   /* сек норма скорости */
+
+  /* ── УТИЛИТЫ ─────────────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+  const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const DAYS_S = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  const DAYS_F = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  const MONTHS_FULL = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+  function fmtDate(s) {
+    const d = new Date(s + 'T00:00:00');
+    return { day: d.getDate(), m: MONTHS[d.getMonth()], dow: DAYS_S[d.getDay()], full: d };
+  }
+  function isViol(r) {
+    if (!r.stats) return false;
+    return (r.stats.correction_pct > CORR_NORM) || (r.stats.avg_position_sec > SPEED_NORM);
+  }
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let _toastTimer;
+  function toast(msg, type = 'ok') {
+    const el = $('toast');
+    el.className = 'toast ' + type;
+    $('toast-msg').textContent = msg;
+    clearTimeout(_toastTimer);
+    setTimeout(() => el.classList.add('show'), 10);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  /* ── ЧАСЫ ────────────────────────────────────────────────── */
+  function tick() {
+    const now = new Date();
+    const d = $('dash-date');
+    const t = $('dash-time');
+    if (d) d.textContent = DAYS_F[now.getDay()].charAt(0).toUpperCase() + DAYS_F[now.getDay()].slice(1) + ', ' + now.getDate() + ' ' + MONTHS_FULL[now.getMonth()];
+    if (t) t.textContent = now.toLocaleTimeString('ru', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* ── НАВИГАЦИЯ ───────────────────────────────────────────── */
+  function navigate(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab, .mt-tab').forEach(t => t.classList.remove('active'));
+    const pg = $('page-' + pageId);
+    if (pg) pg.classList.add('active');
+    document.querySelectorAll('[data-page="' + pageId + '"]').forEach(t => t.classList.add('active'));
+    if (pageId === 'profile') renderProfile();
+    window.scrollTo(0, 0);
+  }
+
+  document.querySelectorAll('[data-page]').forEach(el => {
+    el.addEventListener('click', e => {
+      const pg = el.dataset.page;
+      if (!pg || el.tagName === 'INPUT') return;
+      e.preventDefault();
+      navigate(pg);
+    });
+  });
+
+  /* ── AUTH GUARD ──────────────────────────────────────────── */
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.replace('login.html');
+      return;
+    }
+    currentUser = user;
+
+    /* Загружаем профиль из Firestore */
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    userProfile = snap.exists() ? snap.data() : {};
+
+    /* Обновляем lastLoginAt */
+    await updateDoc(doc(db, 'users', user.uid), { lastLoginAt: serverTimestamp() });
+
+    /* UI */
+    const name = userProfile.displayName || user.displayName || user.email?.split('@')[0] || 'Сборщик';
+    const initials = name.charAt(0).toUpperCase();
+
+    $('nav-avatar').textContent = initials;
+    $('nav-name').textContent   = name;
+    $('dash-name').textContent  = name.split(' ')[0];
+
+    /* Скрываем лоадер, показываем приложение */
+    $('auth-loader').style.display = 'none';
+    $('site-nav').style.display    = '';
+    $('app').classList.add('ready');
+
+    /* Загружаем все отчёты юзера */
+    await loadReports();
+  });
+
+  /* ── ВЫХОД ───────────────────────────────────────────────── */
+  async function logout() {
+    await signOut(auth);
+    window.location.replace('login.html');
+  }
+  $('btn-logout').addEventListener('click', logout);
+  $('btn-logout-2').addEventListener('click', logout);
+
+  /* ══════════════════════════════════════════════════════════
+     FIRESTORE — ЗАГРУЗКА ОТЧЁТОВ
+     Коллекция: reports/{reportId}
+     Каждый документ: { uid, date, address, arrival, departure, stats, createdAt }
+  ══════════════════════════════════════════════════════════ */
+  async function loadReports() {
+    try {
+      const q = query(
+        collection(db, 'reports'),
+        where('uid', '==', currentUser.uid),
+        orderBy('date', 'desc')
+      );
+      const snap = await getDocs(q);
+      allReports = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    } catch(e) {
+      /* Если нет индекса — пробуем без сортировки */
+      const q2 = query(collection(db, 'reports'), where('uid', '==', currentUser.uid));
+      const snap2 = await getDocs(q2);
+      allReports = snap2.docs.map(d => ({ _id: d.id, ...d.data() }))
+        .sort((a,b) => b.date.localeCompare(a.date));
+    }
+
+    renderDashboard();
+    renderHistory();
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     ДАШБОРД
+  ══════════════════════════════════════════════════════════ */
+  function renderDashboard() {
+    const total   = allReports.length;
+    const viols   = allReports.filter(isViol).length;
+    const okPct   = total ? Math.round(((total - viols) / total) * 100) : 0;
+    const corrArr = allReports.filter(r => r.stats && typeof r.stats.correction_pct === 'number');
+    const spArr   = allReports.filter(r => r.stats && typeof r.stats.avg_position_sec === 'number');
+    const avgCorr = corrArr.length ? (corrArr.reduce((s,r) => s+r.stats.correction_pct, 0) / corrArr.length) : null;
+    const avgSpd  = spArr.length  ? (spArr.reduce((s,r)  => s+r.stats.avg_position_sec, 0) / spArr.length)  : null;
+    const totalPos = allReports.reduce((s,r) => s+(r.stats?.positions||0), 0);
+    const totalOrd = allReports.reduce((s,r) => s+(r.stats?.orders||0), 0);
+
+    $('d-total').textContent    = total;
+    $('d-viols').textContent    = viols;
+    $('d-ok-pct').textContent   = okPct + '%';
+    $('d-total-pos').textContent = totalPos.toLocaleString('ru');
+    $('d-total-ord').textContent = totalOrd;
+
+    /* Ср. корр */
+    const cBad = avgCorr !== null && avgCorr > CORR_NORM;
+    $('d-avg-corr').textContent  = avgCorr !== null ? avgCorr.toFixed(1) + '%' : '—';
+    $('d-avg-corr').className    = 'kpi__val ' + (avgCorr === null ? '' : cBad ? 'red' : 'green');
+    $('d-prog-corr').style.width = avgCorr !== null ? Math.min(100,(avgCorr/20)*100) + '%' : '0%';
+    $('d-prog-corr').style.background = cBad ? 'var(--red)' : 'var(--green)';
+
+    /* Ср. скор */
+    const sBad = avgSpd !== null && avgSpd > SPEED_NORM;
+    $('d-avg-speed').textContent  = avgSpd !== null ? Math.round(avgSpd) + ' с' : '—';
+    $('d-avg-speed').className    = 'kpi__val ' + (avgSpd === null ? '' : sBad ? 'red' : 'green');
+    $('d-prog-speed').style.width = avgSpd !== null ? Math.min(100,(avgSpd/70)*100) + '%' : '0%';
+    $('d-prog-speed').style.background = sBad ? 'var(--red)' : 'var(--green)';
+
+    /* Алерт нарушений */
+    const alertEl = $('dash-alert');
+    if (viols > 0) {
+      alertEl.style.display = 'block';
+      $('dash-alert-txt').innerHTML = '<strong>' + viols + ' из ' + total + ' смен</strong> зафиксировали нарушения. Корр. &gt;' + CORR_NORM + '% или скор. &gt;' + SPEED_NORM + 'с.';
+    } else { alertEl.style.display = 'none'; }
+
+    /* Последняя смена */
+    if (allReports.length) {
+      const last = allReports[0];
+      const df = fmtDate(last.date);
+      $('d-last-date').textContent = df.day + ' ' + df.m;
+      $('d-last-addr').textContent = last.address || '—';
+    }
+
+    /* Streak — 30 дней */
+    renderStreak();
+
+    /* Последние 5 */
+    $('dash-recent').innerHTML = allReports.slice(0,5).map(r => reportRowHTML(r, '72px 1fr auto')).join('') ||
+      '<div class="empty"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1.3"/></svg><p>Ещё нет отчётов — добавь первый!</p></div>';
+    bindRowClicks($('dash-recent'));
+  }
+
+  function renderStreak() {
+    const bar    = $('streak-bar');
+    const labels = $('streak-labels');
+    const days   = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().slice(0, 10);
+      const r  = allReports.find(x => x.date === ds);
+      days.push({ ds, r, dow: DAYS_S[d.getDay()], day: d.getDate() });
+    }
+    bar.innerHTML = days.map(d => {
+      let bg = 'var(--surface-3)';
+      let title = d.ds + ': нет смены';
+      if (d.r) {
+        const v = isViol(d.r);
+        bg = v ? 'var(--red)' : 'var(--green)';
+        title = d.ds + (v ? ': нарушение' : ': норма');
+      }
+      return '<div class="streak-cell" style="background:' + bg + ';opacity:' + (d.r ? '.75' : '.3') + '" title="' + title + '"></div>';
+    }).join('');
+    /* Подписи: только каждые 7 дней */
+    labels.innerHTML = days.map((d, i) =>
+      '<div style="flex:1;text-align:center;font-size:.5rem;color:var(--muted-2)">' + (i % 7 === 0 ? d.day + '/' + (new Date(d.ds+'T00:00').getMonth()+1) : '') + '</div>'
+    ).join('');
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     ИСТОРИЯ
+  ══════════════════════════════════════════════════════════ */
+  let histFilterViol = false;
+  let histSearch = '';
+
+  function renderHistory() {
+    let list = allReports.slice();
+    if (histFilterViol)  list = list.filter(isViol);
+    if (histSearch)      list = list.filter(r => (r.address||'').toLowerCase().includes(histSearch.toLowerCase()));
+
+    $('hist-count-label').textContent = list.length + ' смен';
+    $('hist-list').innerHTML = list.map(r => reportRowHTML(r, '80px 1fr 130px auto')).join('') ||
+      '<div class="empty"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="1.4"/><path d="M10 16h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><p>Нет отчётов по фильтру</p></div>';
+    bindRowClicks($('hist-list'));
+  }
+
+  $('hist-filter-viol').addEventListener('click', function() {
+    histFilterViol = !histFilterViol;
+    this.style.borderColor = histFilterViol ? 'rgba(208,96,112,.4)' : '';
+    this.style.color       = histFilterViol ? 'var(--red)' : '';
+    this.style.background  = histFilterViol ? 'var(--red-dim)' : '';
+    renderHistory();
+  });
+  $('hist-search').addEventListener('input', function() { histSearch = this.value; renderHistory(); });
+
+  /* ══════════════════════════════════════════════════════════
+     HTML СТРОКИ ОТЧЁТА (переиспользуется)
+  ══════════════════════════════════════════════════════════ */
+  function reportRowHTML(r, cols) {
+    const df    = fmtDate(r.date);
+    const v     = isViol(r);
+    const s     = r.stats || {};
+    const corr  = typeof s.correction_pct === 'number'   ? s.correction_pct.toFixed(1) + '%' : null;
+    const speed = typeof s.avg_position_sec === 'number'  ? s.avg_position_sec + 'с'          : null;
+    const cBad  = corr  && s.correction_pct   > CORR_NORM;
+    const sBad  = speed && s.avg_position_sec  > SPEED_NORM;
+    const corrW = corr  ? Math.min(100, (s.correction_pct  / 20) * 100) : 0;
+    const spW   = speed ? Math.min(100, (s.avg_position_sec / 60) * 100) : 0;
+
+    return '<div class="report-row ' + (v ? 'viol' : 'ok') + '" data-id="' + esc(r._id) + '" style="grid-template-columns:' + cols + '">' +
+      '<div class="report-date"><strong>' + df.day + '</strong>' + df.m + ' · ' + df.dow + '</div>' +
+      '<div style="min-width:0"><div class="report-addr">' + esc(r.address||'—') + '</div>' +
+        '<div class="report-meta">' + (r.arrival?.time||'') + (r.departure ? ' → ' + r.departure.time : '') + (s.orders ? ' · ' + s.orders + ' заказов' : '') + '</div>' +
+      '</div>' +
+      '<div class="report-bars-col" style="min-width:0">' +
+        (corr  ? '<div class="prog-row"><div class="prog-label">корр</div><div class="prog-track"><div class="prog-fill ' + (cBad?'bad':'ok') + '" style="width:' + corrW + '%"></div></div><div class="prog-val ' + (cBad?'bad':'ok') + '">' + corr + '</div></div>' : '') +
+        (speed ? '<div class="prog-row"><div class="prog-label">скор</div><div class="prog-track"><div class="prog-fill ' + (sBad?'bad':'ok') + '" style="width:' + spW + '%"></div></div><div class="prog-val ' + (sBad?'bad':'ok') + '">' + speed + '</div></div>' : '') +
+      '</div>' +
+      (v ? '<span class="pill pill-red" style="flex-shrink:0"><span class="pill-dot"></span>Нарушение</span>'
+         : '<span class="pill pill-green" style="flex-shrink:0"><span class="pill-dot"></span>ОК</span>') +
+    '</div>';
+  }
+
+  function bindRowClicks(container) {
+    container.querySelectorAll('.report-row[data-id]').forEach(row => {
+      row.addEventListener('click', () => {
+        const r = allReports.find(x => x._id === row.dataset.id);
+        if (r) showReportDetail(r);
+      });
+    });
+  }
+
+  /* Детальный просмотр отчёта (простой модал через toast пока) */
+  function showReportDetail(r) {
+    const df = fmtDate(r.date);
+    toast(df.day + ' ' + df.m + ' · ' + (r.address||'') + (isViol(r) ? ' · ⚠ нарушение' : ' · ОК'), isViol(r)?'err':'ok');
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     НОВЫЙ ОТЧЁТ — СОХРАНЕНИЕ В FIRESTORE
+     Путь: /reports/{auto_id}
+     Данные привязаны к UID пользователя
+  ══════════════════════════════════════════════════════════ */
+
+  /* Ставим сегодняшнюю дату по умолчанию */
+  (function() {
+    const inp = $('r-date');
+    if (inp) inp.value = new Date().toISOString().slice(0, 10);
+  })();
+
+  $('btn-submit-report').addEventListener('click', async () => {
+    /* Валидация */
+    let ok = true;
+    const required = ['r-date', 'r-address', 'r-arr-time', 'r-dep-time'];
+    required.forEach(id => {
+      const el = $(id);
+      if (!el || !el.value.trim()) { el?.classList.add('err'); setTimeout(() => el?.classList.remove('err'), 500); ok = false; }
+    });
+    if (!ok) { toast('Заполните обязательные поля', 'err'); return; }
+
+    const btn = $('btn-submit-report');
+    const txt = $('submit-txt');
+    btn.disabled = true;
+    txt.textContent = 'Сохранение…';
+
+    const date    = $('r-date').value;
+    const address = $('r-address').value.trim();
+    const corrVal = parseFloat($('r-corr').value || '0');
+    const spdVal  = parseFloat($('r-speed').value || '0');
+
+    const reportData = {
+      uid:       currentUser.uid,
+      workerName: userProfile.displayName || currentUser.displayName || '',
+      date,
+      address,
+      arrival: {
+        time:      $('r-arr-time').value,
+        photo_tsd: $('r-arr-photo').value.trim() || null,
+        note:      $('r-arr-note').value.trim()  || null,
+      },
+      departure: {
+        time:          $('r-dep-time').value,
+        photo_tsd:     $('r-dep-photo-tsd').value.trim() || null,
+        photo_stats1:  $('r-dep-photo-s1').value.trim()  || null,
+        photo_stats2:  $('r-dep-photo-s2').value.trim()  || null,
+        note:          $('r-dep-note').value.trim()       || null,
+      },
+      stats: {
+        positions:       parseInt($('r-positions').value || '0') || 0,
+        orders:          parseInt($('r-orders').value    || '0') || 0,
+        correction_pct:  corrVal,
+        avg_position_sec: spdVal,
+      },
+      telegram_post: $('r-tg').value.trim() || null,
+      isViolation:   (corrVal > CORR_NORM) || (spdVal > SPEED_NORM),
+      createdAt:     serverTimestamp(),
+      updatedAt:     serverTimestamp(),
+    };
+
+    try {
+      /* 1. Сохраняем отчёт */
+      await addDoc(collection(db, 'reports'), reportData);
+
+      /* 2. Обновляем статистику в профиле пользователя */
+      const positions = reportData.stats.positions;
+      const orders    = reportData.stats.orders;
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        totalShifts:    increment(1),
+        totalOrders:    increment(orders),
+        totalPositions: increment(positions),
+        updatedAt:      serverTimestamp(),
+      });
+
+      /* 3. Обновляем локальный массив */
+      await loadReports();
+
+      toast('Отчёт сохранён ✓', 'ok');
+      resetForm();
+      navigate('dash');
+
+    } catch(err) {
+      console.error(err);
+      toast('Ошибка: ' + (err.message || err.code), 'err');
+    } finally {
+      btn.disabled = false;
+      txt.textContent = 'Отправить отчёт';
+    }
+  });
+
+  function resetForm() {
+    ['r-address','r-arr-time','r-arr-photo','r-arr-note',
+     'r-dep-time','r-dep-photo-tsd','r-dep-photo-s1','r-dep-photo-s2','r-dep-note',
+     'r-positions','r-orders','r-corr','r-speed','r-tg'].forEach(id => {
+       const el = $(id);
+       if (el) el.value = '';
+     });
+    $('r-date').value = new Date().toISOString().slice(0, 10);
+  }
+  $('btn-reset-form').addEventListener('click', () => { resetForm(); toast('Форма очищена', 'ok'); });
+
+  /* ══════════════════════════════════════════════════════════
+     ПРОФИЛЬ
+  ══════════════════════════════════════════════════════════ */
+  function renderProfile() {
+    const user = currentUser;
+    const p    = userProfile;
+    const name = p.displayName || user.displayName || '';
+
+    /* Аватар */
+    $('prof-av').textContent = name.charAt(0).toUpperCase() || '?';
+    $('prof-name-display').textContent  = name || '—';
+    $('prof-role-display').textContent  = p.role || 'worker';
+    $('prof-email-display').textContent = user.email || '—';
+
+    /* Форма */
+    const setVal = (id, val) => { const el=$(id); if(el && val !== undefined) el.value = val||''; };
+    setVal('p-displayname', p.displayName || user.displayName);
+    setVal('p-phone',    p.phone);
+    setVal('p-telegram', p.telegram);
+    setVal('p-location', p.location);
+    setVal('p-bio',      p.bio);
+
+    /* Firebase мета */
+    $('p-uid').textContent       = user.uid;
+    $('p-email-meta').textContent = user.email || '—';
+    $('p-role-meta').textContent  = p.role || 'worker';
+
+    const fmt = iso => iso ? new Date(iso).toLocaleDateString('ru', { day:'numeric',month:'long',year:'numeric' }) : '—';
+    $('p-created').textContent    = fmt(user.metadata?.creationTime);
+    $('p-last-login').textContent = fmt(user.metadata?.lastSignInTime);
+
+    /* Статистика */
+    $('p-total').textContent = allReports.length;
+    $('p-viols').textContent = allReports.filter(isViol).length;
+    $('p-pos').textContent   = allReports.reduce((s,r)=>s+(r.stats?.positions||0),0).toLocaleString('ru');
+    $('p-ord').textContent   = allReports.reduce((s,r)=>s+(r.stats?.orders||0),0);
+
+    /* UID копировать */
+    $('p-uid').onclick = () => {
+      navigator.clipboard?.writeText(user.uid).then(() => {
+        const orig = $('p-uid').textContent;
+        $('p-uid').textContent = '✓ скопировано';
+        setTimeout(() => $('p-uid').textContent = orig, 1500);
+      });
+    };
+  }
+
+  /* Сохранение профиля */
+  $('btn-save-profile').addEventListener('click', async () => {
+    const gv = id => $(id)?.value.trim() || '';
+    const data = {
+      displayName: gv('p-displayname'),
+      phone:       gv('p-phone'),
+      telegram:    gv('p-telegram'),
+      location:    gv('p-location'),
+      bio:         gv('p-bio'),
+      updatedAt:   serverTimestamp(),
+    };
+    /* Убираем пустые */
+    Object.keys(data).forEach(k => { if (data[k] === '' && k !== 'updatedAt') delete data[k]; });
+
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), data);
+      if (data.displayName && data.displayName !== currentUser.displayName) {
+        await updateProfile(currentUser, { displayName: data.displayName });
+      }
+      userProfile = { ...userProfile, ...data };
+      /* Обновляем nav */
+      const name = data.displayName || userProfile.displayName || '';
+      $('nav-avatar').textContent = name.charAt(0).toUpperCase() || '?';
+      $('nav-name').textContent   = name;
+      $('dash-name').textContent  = name.split(' ')[0];
+      renderProfile();
+      toast('Профиль сохранён ✓', 'ok');
+    } catch(err) {
+      toast('Ошибка: ' + err.message, 'err');
+    }
+  });
+
+</script>
+
+<style>
+@keyframes loaderAnim1 { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>
